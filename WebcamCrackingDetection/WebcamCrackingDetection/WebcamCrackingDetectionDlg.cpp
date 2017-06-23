@@ -103,15 +103,9 @@ BOOL CWebcamCrackingDetectionDlg::OnInitDialog()
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
 
-	db = new Database_Interface;
-	if (!db->ConnectDB("127.0.0.1", "root", "toor", "webcamdetection", 5000))
-	{
-		MessageBox("Initializing DB Failed!");
-		abort();
-	}
 	
 	SetTimer(1, 5000, 0);
-	
+
 	//windows_system("C:\\windows\\system32\\cmd.exe","netstat -ano >> netstat.txt");
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
@@ -167,16 +161,16 @@ HCURSOR CWebcamCrackingDetectionDlg::OnQueryDragIcon()
 }
 
 
-
-void CWebcamCrackingDetectionDlg::OnBnClickedShowlist()
+void CWebcamCrackingDetectionDlg::InspectNetwork() 
 {
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	
-
+	int cnt = 4;
+	int parseTo = 0;
 	CString fileName = _T("netstat.txt");
 	CStdioFile file;
-	CString rStr = _T("");
-	CString strLine = _T("");
+	CString netstatLine = _T("");
+
+	CString string;
+
 
 	setlocale(LC_ALL, "korean");
 	if (file.Open(fileName, CFile::modeRead))
@@ -184,31 +178,94 @@ void CWebcamCrackingDetectionDlg::OnBnClickedShowlist()
 		UINT nBytes = file.GetLength();
 		if (nBytes >= 0)
 		{
-			while (file.ReadString(strLine))
+			while (file.ReadString(netstatLine))
 			{
-				rStr += strLine;
+				if (cnt > 0) {
+					cnt--;
+					continue;
+				}
+
+
+				//rStr += strLine;
+				protocol = "";
+				localAddr = "";
+				outAddr = "";
+				status = "";
+				pid = "";
+
+				for (int i = 0; i < 60; i++)
+				{
+					AfxExtractSubString(string, netstatLine, i, ' ');
+					if (string == "")
+						continue;
+					else
+					{
+						if (parseTo == 0)
+							protocol = string;
+						else if (parseTo == 1)
+							localAddr = string;
+						else if (parseTo == 2)
+							outAddr = string;
+						else if (parseTo == 3)
+							status = string;
+						else if (parseTo == 4)
+							pid = string;
+
+						parseTo++;
+						if (parseTo == 5)
+							break;
+					}
+				}
+
+				CheckSafetyOfPort();
 			}
 		}
 		file.Close();
 	}
 
-	MessageBox(rStr, _T("Error"),MB_ICONERROR | MB_OK);
+	//MessageBox(rStr, _T("Error"),MB_ICONERROR | MB_OK);
 }
 
-BOOLEAN CWebcamCrackingDetectionDlg::IsPortStatusSafe()
-{
 
-	return true;
+void CWebcamCrackingDetectionDlg::OnBnClickedShowlist()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	// AddAttackRecord 메소드를 통해 저장한 공격자 정보를 리스트를 통해 출력
+	
 }
 
-void CWebcamCrackingDetectionDlg::KillMalicioutProcess()
+void CWebcamCrackingDetectionDlg::CheckSafetyOfPort()
 {
+	// DB connection -> Select port_list 후 protocol과 port_number 비교 일치할 경우 return false; 없으면 return true;
+	CString port_number = "";
+	CString string;
 
+	for (int i = 0; i < 2; i++)
+	{
+		AfxExtractSubString(string, localAddr, i, ':');
+		
+		if (i == 1)
+			port_number = string;
+	}
+
+	// DB의 프로토콜과 포트 넘버 비교
+	if (protocol == "TCP" && port_number == "135") {
+		//KillMaliciousProcess(pid);
+		AddAttackRecord();
+	}
+}
+
+void CWebcamCrackingDetectionDlg::KillMaliciousProcess(CString pid)
+{
+	CString tmpcmd = "C:\\windows\\system32\\cmd.exe /c Taskkill /PID " + pid ;
+	CString cmd = tmpcmd + "/F";
+	WinExec(cmd, SW_HIDE);
 }
 
 void CWebcamCrackingDetectionDlg::AddAttackRecord()
 {
-
+	// netstatLine (프로토콜, 로컬주소, 외부주소, 상태, pid 모두 있음)
+	// 을 listView에 추가한다.
 }
 
 
@@ -218,11 +275,8 @@ void CWebcamCrackingDetectionDlg::OnTimer(UINT nIDEvent)
 	{
 	case 1:
 		//system("netstat -ano >> netstat.txt");
-		WinExec("C:\\windows\\system32\\cmd.exe /c netstat -ano >> netstat.txt", SW_HIDE);
-		if (!IsPortStatusSafe()) {
-			KillMalicioutProcess();
-			AddAttackRecord();
-		}
+		WinExec("C:\\windows\\system32\\cmd.exe /c netstat -ano > netstat.txt", SW_HIDE);
+		InspectNetwork();
 		
 		break;
 	}
@@ -443,21 +497,40 @@ UINT CWebcamCrackingDetectionDlg::ThreadFirst(LPVOID _mothod)
 
 // db select example
 /*
-void CGuestHouseDlg::InitComboBox()
+
+/*
+
+
+mysql_init(&m_MySql);
+
+
+
+if (mysql_real_connect(&m_MySql, DB_ADDRESS, DB_ID, DB_PASS, DB_NAME, 3306, NULL, 0) == NULL)
+{ // 디비 접속
+return;
+}
+
+strQuery.Format(_T("SELECT id FROM user WHERE id ='%s' "), _T("CL"));
+
+if (mysql_query(&m_MySql, CStringA(strQuery))) // 쿼리 요청
 {
-string query = "SELECT DISTINCT language FROM language; ";
-MYSQL_RES rs = db->SendQuery(query);
-MYSQL_ROW row;
-
-while (row = mysql_fetch_row(&rs)) {
-m_comboLanguage.AddString(row[0]);
+AfxMessageBox(_T("쿼리 에러"));
+return;
 }
 
-query = "SELECT DISTINCT subway_stn FROM subway_stn; ";
-rs = db->SendQuery(query);
-while (row = mysql_fetch_row(&rs))
-m_comboStn.AddString(row[0]);
-
+if ((m_Res = mysql_store_result(&m_MySql)) == NULL) // 결과를 m_Res에 저장
+{
+return;
 }
+row = mysql_fetch_row(m_Res); //m_Res의 값을 row로 저장해서 하나씩 갖고 오기
+
+
+중략.....
+
+
+mysql_free_result(m_Res); // m_Res 삭제
+mysql_close(&m_MySql); // m_MySql 삭제
+
+
 
 */

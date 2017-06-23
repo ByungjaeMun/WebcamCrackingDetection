@@ -6,7 +6,8 @@
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
 #include <stdio.h>
-#include "Database_Interface.h"
+#include <sstream>
+using namespace std;
 
 #pragma warning(disable:4996)
 #pragma comment(lib, "iphlpapi.lib")
@@ -29,8 +30,13 @@ public:
 	CWebcamCrackingDetectionDlg(CWnd* pParent = NULL);	// 표준 생성자입니다.
 
 private:
-	
-	Database_Interface* db;
+
+	CString protocol;
+	CString localAddr; 
+	CString outAddr; 
+	CString status; 
+	CString pid;
+	CString netstatLine;
 
 // 대화 상자 데이터입니다.
 #ifdef AFX_DESIGN_TIME
@@ -54,9 +60,11 @@ protected:
 public:
 	afx_msg void OnBnClickedShowlist();
 	afx_msg void OnTimer(UINT nIDEvent);
-	BOOLEAN IsPortStatusSafe();
-	void KillMalicioutProcess();
+	void CheckSafetyOfPort();
+	void InspectNetwork();
+	void KillMaliciousProcess(CString pid);
 	void AddAttackRecord();
 	//int windows_system(const char* prog, const char *cmd);
 	//int SaveNetstat();
 };
+

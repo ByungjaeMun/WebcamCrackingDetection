@@ -28,7 +28,7 @@ public:
 	CWebcamCrackingDetectionDlg(CWnd* pParent = NULL);	// 표준 생성자입니다.
 
 private:
-
+	
 	CString protocol;
 	CString localAddr; 
 	CString outAddr; 
@@ -64,5 +64,7 @@ public:
 	void AddAttackRecord();
 	//int windows_system(const char* prog, const char *cmd);
 	//int SaveNetstat();
+	afx_msg void OnBnClickedButton2();
+	CStatic m_pic;
 };
 

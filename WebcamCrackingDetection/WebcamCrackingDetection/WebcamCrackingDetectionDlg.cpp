@@ -62,6 +62,7 @@ CWebcamCrackingDetectionDlg::CWebcamCrackingDetectionDlg(CWnd* pParent /*=NULL*/
 void CWebcamCrackingDetectionDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_PIC, m_pic);
 }
 
 BEGIN_MESSAGE_MAP(CWebcamCrackingDetectionDlg, CDialogEx)
@@ -113,6 +114,10 @@ BOOL CWebcamCrackingDetectionDlg::OnInitDialog()
 		MessageBox("Initializing DB Failed!");
 		abort();
 	}*/
+
+	HBITMAP hbit;
+	hbit = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_BITMAP1));
+	m_pic.SetBitmap(hbit);
 	
 	SetTimer(1, 5000, 0);
 	
@@ -144,6 +149,18 @@ void CWebcamCrackingDetectionDlg::OnPaint()
 	{
 		CPaintDC dc(this); // 그리기를 위한 디바이스 컨텍스트입니다.
 
+		
+		/*
+		CBitmap bmp;
+		bmp.LoadBitmap(IDB_BITMAP1);
+		((CStatic *)GetDlgItem(IDC_PIC))->SetBitmap((HBITMAP)bmp.GetSafeHandle());
+		*/
+		/*
+		CStatic* PictureControlt = (CStatic*)GetDlgItem(IDC_PIC);
+		CBitmap image;
+		image.LoadBitmap(IDB_BITMAP1);
+		PictureControlt->SetBitmap(image);
+		*/
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
 		// 클라이언트 사각형에서 아이콘을 가운데에 맞춥니다.
@@ -266,6 +283,7 @@ void CWebcamCrackingDetectionDlg::OnBnClickedButton2()
 		vc >> img;
 		if (img.empty())
 		{
+			/*
 			if (IDYES == MessageBox("해킹중입니다. 웹캠을 끄시겠습니까?", "경고", MB_YESNO))
 			{
 				MessageBox("네 꺼주세요");
@@ -275,6 +293,8 @@ void CWebcamCrackingDetectionDlg::OnBnClickedButton2()
 				{
 					MessageBox("아니요");
 				}
+				*/
+			MessageBox("웹캠이 실행중입니다. 위험합니다!","경고");
 			break;
 		}
 		else

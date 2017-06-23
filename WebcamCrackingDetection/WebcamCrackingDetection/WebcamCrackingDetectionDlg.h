@@ -7,6 +7,7 @@
 #include <iphlpapi.h>
 #include <stdio.h>
 #include "Database_Interface.h"
+#include "afxwin.h"
 
 #pragma warning(disable:4996)
 #pragma comment(lib, "iphlpapi.lib")
@@ -60,4 +61,5 @@ public:
 	//int windows_system(const char* prog, const char *cmd);
 	//int SaveNetstat();
 	afx_msg void OnBnClickedButton2();
+	CStatic m_pic;
 };

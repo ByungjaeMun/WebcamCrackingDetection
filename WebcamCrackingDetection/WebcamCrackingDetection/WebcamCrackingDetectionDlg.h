@@ -30,7 +30,7 @@ public:
 
 private:
 	
-	Database_Interface* db;
+//	Database_Interface* db;
 
 // 대화 상자 데이터입니다.
 #ifdef AFX_DESIGN_TIME
@@ -53,10 +53,11 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedShowlist();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	BOOLEAN IsPortStatusSafe();
 	void KillMalicioutProcess();
 	void AddAttackRecord();
 	//int windows_system(const char* prog, const char *cmd);
 	//int SaveNetstat();
+	afx_msg void OnBnClickedButton2();
 };

@@ -1,6 +1,9 @@
 #pragma once
-#include"Mysql.h"
+
+/*
+#include<mysql.h>
 #include<string>
+
 using namespace std;
 
 
@@ -21,3 +24,4 @@ public:
 	void SendQuery_void(string query);
 };
 
+*/

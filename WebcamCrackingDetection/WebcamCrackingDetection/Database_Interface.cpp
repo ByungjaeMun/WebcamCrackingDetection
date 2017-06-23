@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Database_Interface.h"
 
-
+/*
 Database_Interface::Database_Interface()
 {
 }
@@ -30,3 +30,4 @@ bool Database_Interface::ConnectDB(string Host, string User, string Password, st
 {
 	return mysql.Initialize(Host, User, Password, DB_Name, Port);
 }
+*/

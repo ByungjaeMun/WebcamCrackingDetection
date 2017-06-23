@@ -1,4 +1,3 @@
-
 // WebcamCrackingDetectionDlg.cpp : 구현 파일
 //
 
@@ -6,6 +5,10 @@
 #include "WebcamCrackingDetection.h"
 #include "WebcamCrackingDetectionDlg.h"
 #include "afxdialogex.h"
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -67,6 +70,7 @@ BEGIN_MESSAGE_MAP(CWebcamCrackingDetectionDlg, CDialogEx)
 	ON_WM_TIMER()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_SHOWLIST, &CWebcamCrackingDetectionDlg::OnBnClickedShowlist)
+	ON_BN_CLICKED(IDC_BUTTON2, &CWebcamCrackingDetectionDlg::OnBnClickedButton2)
 END_MESSAGE_MAP()
 
 
@@ -75,8 +79,8 @@ END_MESSAGE_MAP()
 BOOL CWebcamCrackingDetectionDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
-
 	// 시스템 메뉴에 "정보..." 메뉴 항목을 추가합니다.
+
 
 	// IDM_ABOUTBOX는 시스템 명령 범위에 있어야 합니다.
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
@@ -103,12 +107,12 @@ BOOL CWebcamCrackingDetectionDlg::OnInitDialog()
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
 
-	db = new Database_Interface;
+/*	db = new Database_Interface;
 	if (!db->ConnectDB("127.0.0.1", "root", "toor", "webcamdetection", 5000))
 	{
 		MessageBox("Initializing DB Failed!");
 		abort();
-	}
+	}*/
 	
 	SetTimer(1, 5000, 0);
 	
@@ -212,7 +216,7 @@ void CWebcamCrackingDetectionDlg::AddAttackRecord()
 }
 
 
-void CWebcamCrackingDetectionDlg::OnTimer(UINT nIDEvent)
+void CWebcamCrackingDetectionDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	switch (nIDEvent)
 	{
@@ -228,217 +232,6 @@ void CWebcamCrackingDetectionDlg::OnTimer(UINT nIDEvent)
 	}
 	KillTimer(1);
 }
-
-/*
-int CWebcamCrackingDetectionDlg::SaveNetstat() 
-{
-	
-	return 0;
-}
-
-int CWebcamCrackingDetectionDlg::windows_system(const char* prog,  const char *cmd)
-{
-	PROCESS_INFORMATION p_info;
-	STARTUPINFO s_info;
-	LPSTR cmdline, programpath;
-
-	memset(&s_info, 0, sizeof(s_info));
-	memset(&p_info, 0, sizeof(p_info));
-	s_info.cb = sizeof(s_info);
-
-	cmdline = _tcsdup(TEXT(cmd));
-	programpath = _tcsdup(TEXT(prog));
-
-	if (CreateProcess(programpath, cmdline, NULL, NULL, 0, 0, NULL, NULL, &s_info, &p_info))
-	{
-		WaitForSingleObject(p_info.hProcess, INFINITE);
-		CloseHandle(p_info.hProcess);
-		CloseHandle(p_info.hThread);
-	}
-	return 0;
-}
-int CWebcamCrackingDetectionDlg::SaveNetstat()
-{
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	CString str="", tempStr ="";
-	CFile file;
-	int length;
-
-	// Declare and initialize variables
-	PMIB_TCPTABLE pTcpTable;
-	DWORD dwSize = 0;
-	DWORD dwRetVal = 0;
-
-
-	char szLocalAddr[128];
-	char szRemoteAddr[128];
-
-	struct in_addr IpAddr;
-
-	int i;
-
-	pTcpTable = (MIB_TCPTABLE *)MALLOC(sizeof(MIB_TCPTABLE));
-	if (pTcpTable == NULL) {
-		//printf("Error allocating memory\n");
-		MessageBox("Error allocating memory\n", "", NULL);
-		return 1;
-	}
-
-	dwSize = sizeof(MIB_TCPTABLE);
-	// Make an initial call to GetTcpTable to
-	// get the necessary size into the dwSize variable
-	if ((dwRetVal = GetTcpTable(pTcpTable, &dwSize, TRUE)) ==
-		ERROR_INSUFFICIENT_BUFFER) {
-		FREE(pTcpTable);
-		pTcpTable = (MIB_TCPTABLE *)MALLOC(dwSize);
-		if (pTcpTable == NULL) {
-			//printf("Error allocating memory\n");
-			MessageBox("Error allocating memory\n", "", NULL);
-			return 1;
-		}
-	}
-
-	
-	// Make a second call to GetTcpTable to get
-	// the actual data we require
-	if ((dwRetVal = GetTcpTable(pTcpTable, &dwSize, TRUE)) == NO_ERROR) {
-		printf("\tNumber of entries: %d\r\n", (int)pTcpTable->dwNumEntries);
-
-		//file이 제대로 열렸다면
-		if (file.Open("netstat.txt", CFile::modeCreate | CFile::modeWrite | CFile::modeNoTruncate))
-		{
-
-			for (i = 0; i < (int)pTcpTable->dwNumEntries; i++) {
-				IpAddr.S_un.S_addr = (u_long)pTcpTable->table[i].dwLocalAddr;
-				strcpy_s(szLocalAddr, sizeof(szLocalAddr), inet_ntoa(IpAddr));
-				IpAddr.S_un.S_addr = (u_long)pTcpTable->table[i].dwRemoteAddr;
-				strcpy_s(szRemoteAddr, sizeof(szRemoteAddr), inet_ntoa(IpAddr));
-
-				str.Format("\r\n\tTCP[%d] State: %ld - ", i,pTcpTable->table[i].dwState);
-				//printf("\n\tTCP[%d] State: %ld - ", i,
-				//	pTcpTable->table[i].dwState);
-				switch (pTcpTable->table[i].dwState) {
-				case MIB_TCP_STATE_CLOSED:
-					//printf("CLOSED\n");
-					str += "CLOSED\r\n";
-					break;
-				case MIB_TCP_STATE_LISTEN:
-					//printf("LISTEN\n");
-					str += "LISTEN\r\n";
-					break;
-				case MIB_TCP_STATE_SYN_SENT:
-					//printf("SYN-SENT\n");
-					str += "SYN-SENT\r\n";
-					break;
-				case MIB_TCP_STATE_SYN_RCVD:
-					//printf("SYN-RECEIVED\n");
-					str += "SYN-RECEIVED\r\n";
-					break;
-				case MIB_TCP_STATE_ESTAB:
-					//printf("ESTABLISHED\n");
-					str += "ESTABLISHED\r\n";
-					break;
-				case MIB_TCP_STATE_FIN_WAIT1:
-					//printf("FIN-WAIT-1\n");
-					str += "FIN-WAIT-1\r\n";
-					break;
-				case MIB_TCP_STATE_FIN_WAIT2:
-					//printf("FIN-WAIT-2 \n");
-					str += "FIN-WAIT-2\r\n";
-					break;
-				case MIB_TCP_STATE_CLOSE_WAIT:
-					//printf("CLOSE-WAIT\n");
-					str += "CLOSE-WAIT\r\n";
-					break;
-				case MIB_TCP_STATE_CLOSING:
-					//printf("CLOSING\n");
-					str += "CLOSING\r\n";
-					break;
-				case MIB_TCP_STATE_LAST_ACK:
-					//printf("LAST-ACK\n");
-					str += "LAST-ACK\r\n";
-					break;
-				case MIB_TCP_STATE_TIME_WAIT:
-					//printf("TIME-WAIT\n");
-					str += "TIME-WAIT\r\n";
-					break;
-				case MIB_TCP_STATE_DELETE_TCB:
-					//printf("DELETE-TCB\n");
-					str += "DELETE-TCB\r\n";
-					break;
-				default:
-					//printf("UNKNOWN dwState value\n");
-					str += "UNKNOWN dwState value\r\n";
-					break;
-				}
-
-
-				tempStr.Format("\tTCP[%d] Local Addr: %s\r\n\tTCP[%d] Local Port: %d \r\n\tTCP[%d] Remote Addr: %s\r\n\tTCP[%d] Remote Port: %d\r\n", i, szLocalAddr, i,
-					ntohs((u_short)pTcpTable->table[i].dwLocalPort), i, szRemoteAddr, i,
-					ntohs((u_short)pTcpTable->table[i].dwRemotePort));
-				//printf("\tTCP[%d] Local Addr: %s\n", i, szLocalAddr);
-				//printf("\tTCP[%d] Local Port: %d \n", i,
-				//	ntohs((u_short)pTcpTable->table[i].dwLocalPort));
-				//printf("\tTCP[%d] Remote Addr: %s\n", i, szRemoteAddr);
-				//printf("\tTCP[%d] Remote Port: %d\n", i,
-				//	ntohs((u_short)pTcpTable->table[i].dwRemotePort));
-				
-				str += tempStr;
-				//str변수의 길이를 구한 후 + 1을 합니다.
-				length = str.GetLength() + 1;
-
-				//file에 integer 크기만큼 length길이를 쓰고
-				file.Write(&length, sizeof(int));
-
-				//file에 length 길이만큼 str의 문자열을 저장합니다. 
-				file.Write(str, length);
-
-				
-				str = "";
-				tempStr = "";
-			}
-
-			//파일을 닫습니다.
-			file.Close();
-
-			//MessageBox를 띄워 확인합니다.
-			MessageBox("저장에 성공했습니다!", "알림", MB_OK | MB_ICONINFORMATION);
-		}
-	}
-	else {
-		//printf("\tGetTcpTable failed with %d\n", dwRetVal);
-		MessageBox("\tGetTcpTable failed with"+ dwRetVal, "", NULL);
-		FREE(pTcpTable);
-		return 1;
-	}
-
-	if (pTcpTable != NULL) {
-		FREE(pTcpTable);
-		pTcpTable = NULL;
-	}
-	
-}
-
-
-UINT CWebcamCrackingDetectionDlg::ThreadFirst(LPVOID _mothod)
-{
-	CWebcamCrackingDetectionDlg *fir = (CWebcamCrackingDetectionDlg*)_mothod;
-
-	while (1)
-	{
-		// ..이 곳에 루프 시 수행할 동작을 선언하세요.
-		CWebcamCrackingDetectionDlg* pDlg = (CWebcamCrackingDetectionDlg*)AfxGetApp()->m_pMainWnd;
-		pDlg->SaveNetstat();
-
-		Sleep(1000);
-	}
-	return 0;
-}
-*/
-
-
-
-
 
 
 // db select example
@@ -461,3 +254,33 @@ m_comboStn.AddString(row[0]);
 }
 
 */
+
+void CWebcamCrackingDetectionDlg::OnBnClickedButton2()
+{
+	
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+
+	cv::VideoCapture vc(0); //0번웹캠 초기화
+	cv::Mat img;
+	while (1) {
+		vc >> img;
+		if (img.empty())
+		{
+			if (IDYES == MessageBox("해킹중입니다. 웹캠을 끄시겠습니까?", "경고", MB_YESNO))
+			{
+				MessageBox("네 꺼주세요");
+			}
+			else
+				if (IDNO)
+				{
+					MessageBox("아니요");
+				}
+			break;
+		}
+		else
+		{
+			MessageBox("웹캠 실행X, 안심하셔도 됩니다.");
+			break;
+		}
+	}
+}

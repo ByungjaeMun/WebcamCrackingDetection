@@ -6,8 +6,6 @@
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
 #include <stdio.h>
-#include <sstream>
-using namespace std;
 
 #pragma warning(disable:4996)
 #pragma comment(lib, "iphlpapi.lib")

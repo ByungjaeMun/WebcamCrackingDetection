@@ -28,7 +28,7 @@ public:
 	CWebcamCrackingDetectionDlg(CWnd* pParent = NULL);	// 표준 생성자입니다.
 
 private:
-	int SaveNetstat();
+	//int SaveNetstat();
 
 
 // 대화 상자 데이터입니다.
@@ -53,5 +53,6 @@ protected:
 public:
 	afx_msg void OnBnClickedShowlist();
 	afx_msg void OnTimer(UINT nIDEvent);
+	//int windows_system(const char* prog, const char *cmd);
 
 };

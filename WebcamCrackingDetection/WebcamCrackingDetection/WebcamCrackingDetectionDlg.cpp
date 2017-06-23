@@ -104,6 +104,8 @@ BOOL CWebcamCrackingDetectionDlg::OnInitDialog()
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
 	
 	SetTimer(1, 5000, 0);
+	
+	//windows_system("C:\\windows\\system32\\cmd.exe","netstat -ano >> netstat.txt");
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -187,6 +189,46 @@ void CWebcamCrackingDetectionDlg::OnBnClickedShowlist()
 }
 
 
+void CWebcamCrackingDetectionDlg::OnTimer(UINT nIDEvent)
+{
+	switch (nIDEvent)
+	{
+	case 1:
+		//system("netstat -ano >> netstat.txt");
+		WinExec("C:\\windows\\system32\\cmd.exe /c netstat -ano >> netstat.txt", SW_HIDE);
+		break;
+	}
+	KillTimer(1);
+}
+
+/*
+int CWebcamCrackingDetectionDlg::SaveNetstat() 
+{
+	
+	return 0;
+}
+
+int CWebcamCrackingDetectionDlg::windows_system(const char* prog,  const char *cmd)
+{
+	PROCESS_INFORMATION p_info;
+	STARTUPINFO s_info;
+	LPSTR cmdline, programpath;
+
+	memset(&s_info, 0, sizeof(s_info));
+	memset(&p_info, 0, sizeof(p_info));
+	s_info.cb = sizeof(s_info);
+
+	cmdline = _tcsdup(TEXT(cmd));
+	programpath = _tcsdup(TEXT(prog));
+
+	if (CreateProcess(programpath, cmdline, NULL, NULL, 0, 0, NULL, NULL, &s_info, &p_info))
+	{
+		WaitForSingleObject(p_info.hProcess, INFINITE);
+		CloseHandle(p_info.hProcess);
+		CloseHandle(p_info.hThread);
+	}
+	return 0;
+}
 int CWebcamCrackingDetectionDlg::SaveNetstat()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
@@ -350,13 +392,18 @@ int CWebcamCrackingDetectionDlg::SaveNetstat()
 }
 
 
-void CWebcamCrackingDetectionDlg::OnTimer(UINT nIDEvent)
+UINT CWebcamCrackingDetectionDlg::ThreadFirst(LPVOID _mothod)
 {
-	switch (nIDEvent)
+	CWebcamCrackingDetectionDlg *fir = (CWebcamCrackingDetectionDlg*)_mothod;
+
+	while (1)
 	{
-	case 1:
-		SaveNetstat();
-		break;
+		// ..이 곳에 루프 시 수행할 동작을 선언하세요.
+		CWebcamCrackingDetectionDlg* pDlg = (CWebcamCrackingDetectionDlg*)AfxGetApp()->m_pMainWnd;
+		pDlg->SaveNetstat();
+
+		Sleep(1000);
 	}
-	KillTimer(1);
+	return 0;
 }
+*/

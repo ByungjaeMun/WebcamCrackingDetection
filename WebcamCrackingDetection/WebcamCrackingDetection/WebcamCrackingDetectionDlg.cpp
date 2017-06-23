@@ -102,6 +102,13 @@ BOOL CWebcamCrackingDetectionDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
+
+	db = new Database_Interface;
+	if (!db->ConnectDB("127.0.0.1", "root", "toor", "webcamdetection", 5000))
+	{
+		MessageBox("Initializing DB Failed!");
+		abort();
+	}
 	
 	SetTimer(1, 5000, 0);
 	
@@ -188,6 +195,22 @@ void CWebcamCrackingDetectionDlg::OnBnClickedShowlist()
 	MessageBox(rStr, _T("Error"),MB_ICONERROR | MB_OK);
 }
 
+BOOLEAN CWebcamCrackingDetectionDlg::IsPortStatusSafe()
+{
+
+	return true;
+}
+
+void CWebcamCrackingDetectionDlg::KillMalicioutProcess()
+{
+
+}
+
+void CWebcamCrackingDetectionDlg::AddAttackRecord()
+{
+
+}
+
 
 void CWebcamCrackingDetectionDlg::OnTimer(UINT nIDEvent)
 {
@@ -196,6 +219,11 @@ void CWebcamCrackingDetectionDlg::OnTimer(UINT nIDEvent)
 	case 1:
 		//system("netstat -ano >> netstat.txt");
 		WinExec("C:\\windows\\system32\\cmd.exe /c netstat -ano >> netstat.txt", SW_HIDE);
+		if (!IsPortStatusSafe()) {
+			KillMalicioutProcess();
+			AddAttackRecord();
+		}
+		
 		break;
 	}
 	KillTimer(1);
@@ -406,4 +434,30 @@ UINT CWebcamCrackingDetectionDlg::ThreadFirst(LPVOID _mothod)
 	}
 	return 0;
 }
+*/
+
+
+
+
+
+
+// db select example
+/*
+void CGuestHouseDlg::InitComboBox()
+{
+string query = "SELECT DISTINCT language FROM language; ";
+MYSQL_RES rs = db->SendQuery(query);
+MYSQL_ROW row;
+
+while (row = mysql_fetch_row(&rs)) {
+m_comboLanguage.AddString(row[0]);
+}
+
+query = "SELECT DISTINCT subway_stn FROM subway_stn; ";
+rs = db->SendQuery(query);
+while (row = mysql_fetch_row(&rs))
+m_comboStn.AddString(row[0]);
+
+}
+
 */

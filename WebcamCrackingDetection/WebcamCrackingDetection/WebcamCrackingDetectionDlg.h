@@ -7,6 +7,9 @@
 #include <iphlpapi.h>
 #include <stdio.h>
 
+#include "mysql.h"
+#include "afxcmn.h"
+
 #pragma warning(disable:4996)
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
@@ -57,7 +60,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedShowlist();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	void CheckSafetyOfPort();
 	void InspectNetwork();
 	void KillMaliciousProcess(CString pid);
@@ -66,5 +69,19 @@ public:
 	//int SaveNetstat();
 	afx_msg void OnBnClickedButton2();
 	CStatic m_pic;
-};
 
+	CString strQuery;
+
+	MYSQL_RES* m_Res;
+	MYSQL_ROW row;
+	MYSQL mysql;
+
+	CString ptarray[100];
+	CString ptNarray[100];
+	CListCtrl m_detectedList;
+
+	bool finished;
+
+	int count;
+	CProgressCtrl m_progress;
+};

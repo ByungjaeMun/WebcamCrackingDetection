@@ -1,6 +1,5 @@
 // WebcamCrackingDetectionDlg.cpp : 구현 파일
 //
-
 #include "stdafx.h"
 #include "WebcamCrackingDetection.h"
 #include "WebcamCrackingDetectionDlg.h"
@@ -10,13 +9,16 @@
 #include <opencv2/highgui/highgui.hpp>
 
 
+#define MYSQL_HOST  "localhost"
+#define MYSQL_USER  "root"
+#define MYSQL_PWD   "autoset"
+#define MYSQL_DB "webcam"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
-
 class CAboutDlg : public CDialogEx
 {
 public:
@@ -47,11 +49,7 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
-
 // CWebcamCrackingDetectionDlg 대화 상자
-
-
-
 CWebcamCrackingDetectionDlg::CWebcamCrackingDetectionDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_WEBCAMCRACKINGDETECTION_DIALOG, pParent)
 {
@@ -63,6 +61,8 @@ void CWebcamCrackingDetectionDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_PIC, m_pic);
+	DDX_Control(pDX, IDC_DETECTED, m_detectedList);
+	DDX_Control(pDX, IDC_PROGRESS1, m_progress);
 }
 
 BEGIN_MESSAGE_MAP(CWebcamCrackingDetectionDlg, CDialogEx)
@@ -76,12 +76,13 @@ END_MESSAGE_MAP()
 
 
 // CWebcamCrackingDetectionDlg 메시지 처리기
-
 BOOL CWebcamCrackingDetectionDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 	// 시스템 메뉴에 "정보..." 메뉴 항목을 추가합니다.
 
+	count = 0;
+	finished = false;
 
 	// IDM_ABOUTBOX는 시스템 명령 범위에 있어야 합니다.
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
@@ -113,9 +114,15 @@ BOOL CWebcamCrackingDetectionDlg::OnInitDialog()
 	hbit = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_BITMAP1));
 	m_pic.SetBitmap(hbit);
 	
-	SetTimer(1, 5000, 0);
 	
-	//windows_system("C:\\windows\\system32\\cmd.exe","netstat -ano >> netstat.txt");
+
+	m_detectedList.SetExtendedStyle(LVS_EX_GRIDLINES);
+
+	m_detectedList.InsertColumn(0, _T("위험요소"), LVCFMT_CENTER, 70, -1);
+	m_detectedList.InsertColumn(1, _T("프로토콜"), LVCFMT_CENTER, 170, -1);
+	m_detectedList.InsertColumn(2, _T("포트번호"), LVCFMT_CENTER, 170, -1);
+
+	m_progress.SetRange(0, 100);
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -136,25 +143,12 @@ void CWebcamCrackingDetectionDlg::OnSysCommand(UINT nID, LPARAM lParam)
 // 대화 상자에 최소화 단추를 추가할 경우 아이콘을 그리려면
 //  아래 코드가 필요합니다.  문서/뷰 모델을 사용하는 MFC 응용 프로그램의 경우에는
 //  프레임워크에서 이 작업을 자동으로 수행합니다.
-
 void CWebcamCrackingDetectionDlg::OnPaint()
 {
 	if (IsIconic())
 	{
 		CPaintDC dc(this); // 그리기를 위한 디바이스 컨텍스트입니다.
 
-		
-		/*
-		CBitmap bmp;
-		bmp.LoadBitmap(IDB_BITMAP1);
-		((CStatic *)GetDlgItem(IDC_PIC))->SetBitmap((HBITMAP)bmp.GetSafeHandle());
-		*/
-		/*
-		CStatic* PictureControlt = (CStatic*)GetDlgItem(IDC_PIC);
-		CBitmap image;
-		image.LoadBitmap(IDB_BITMAP1);
-		PictureControlt->SetBitmap(image);
-		*/
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
 		// 클라이언트 사각형에서 아이콘을 가운데에 맞춥니다.
@@ -181,7 +175,6 @@ HCURSOR CWebcamCrackingDetectionDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-
 void CWebcamCrackingDetectionDlg::InspectNetwork() 
 {
 	int cnt = 4;
@@ -192,7 +185,6 @@ void CWebcamCrackingDetectionDlg::InspectNetwork()
 
 	CString string;
 
-
 	setlocale(LC_ALL, "korean");
 	if (file.Open(fileName, CFile::modeRead))
 	{
@@ -201,11 +193,11 @@ void CWebcamCrackingDetectionDlg::InspectNetwork()
 		{
 			while (file.ReadString(netstatLine))
 			{
+				m_progress.SetPos(nBytes);
 				if (cnt > 0) {
 					cnt--;
 					continue;
 				}
-
 
 				//rStr += strLine;
 				protocol = "";
@@ -214,6 +206,7 @@ void CWebcamCrackingDetectionDlg::InspectNetwork()
 				status = "";
 				pid = "";
 
+				//60으로 할것인지?
 				for (int i = 0; i < 60; i++)
 				{
 					AfxExtractSubString(string, netstatLine, i, ' ');
@@ -234,7 +227,10 @@ void CWebcamCrackingDetectionDlg::InspectNetwork()
 
 						parseTo++;
 						if (parseTo == 5)
+						{
+							parseTo = 0;
 							break;
+						}
 					}
 				}
 
@@ -242,22 +238,52 @@ void CWebcamCrackingDetectionDlg::InspectNetwork()
 			}
 		}
 		file.Close();
-	}
 
-	//MessageBox(rStr, _T("Error"),MB_ICONERROR | MB_OK);
+		
+		
+		for (int i = 0; i < count; i++)
+		{
+			m_detectedList.InsertItem(0, "검출");
+		}
+
+		for (int i = 0; i < count; i++)
+		{
+
+			//m_detectedList.SetItem(i, 0, LVIF_TEXT, "검출", 0, 0, 0, NULL);
+			m_detectedList.SetItem(i, 1, LVIF_TEXT, ptarray[i], 0, 0, 0, NULL);
+			m_detectedList.SetItem(i, 2, LVIF_TEXT, ptNarray[i], 0, 0, 0, NULL);
+		}
+
+		for (int j = 0; j < count; j++)
+		{
+			ptarray[j] = "";
+			ptNarray[j] = "";
+		}
+
+		KillTimer(1);
+		count = 0;
+		finished = false;
+	}
 }
 
 
 void CWebcamCrackingDetectionDlg::OnBnClickedShowlist()
 {
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합
 	// AddAttackRecord 메소드를 통해 저장한 공격자 정보를 리스트를 통해 출력
-
+	if (!finished)
+	{
+		SetTimer(1, 1000, 0);
+		finished = true;
+	}
+	m_detectedList.DeleteAllItems();
+	m_progress.SetPos(0);
 }
 
 void CWebcamCrackingDetectionDlg::CheckSafetyOfPort()
 {
-	// DB connection -> Select port_list 후 protocol과 port_number 비교 일치할 경우 return false; 없으면 return true;
+	// DB connection -> Select port_list 후 protocol과 port_number 비교
+	//일치할 경우 return false; 없으면 return true;
 	CString port_number = "";
 	CString string;
 
@@ -268,12 +294,48 @@ void CWebcamCrackingDetectionDlg::CheckSafetyOfPort()
 		if (i == 1)
 			port_number = string;
 }
+	mysql_init(&mysql);
 
+	if (!mysql_real_connect(&mysql, MYSQL_HOST, MYSQL_USER, MYSQL_PWD, MYSQL_DB, 3306, 0, 0))
+	{
+		MessageBox(mysql_error(&mysql), MB_OK);
+		mysql_close(&mysql);
+	}
+	else
+	{
+		strQuery.Format(_T("SELECT `type`, `port` FROM `dangerous` WHERE 1"));
+
+		if (mysql_query(&mysql, CStringA(strQuery))) // 쿼리 요청
+		{
+			MessageBox("쿼리 에러");
+		}
+		else
+		{
+			m_Res = mysql_store_result(&mysql);
+
+			while (row = mysql_fetch_row(m_Res))
+			{
+				if ( (protocol == CString(row[0])) && (port_number == CString(row[1])) )
+				{
+					MessageBox("위험요소가 검출되었습니다!","!위험!");
+					ptarray[count] = protocol;
+					ptNarray[count] = port_number;
+
+					count++;
+				}
+			}
+			mysql_free_result(m_Res); // m_Res 삭제
+		}
+		mysql_close(&mysql);
+	}
+
+	mysql_close(&mysql);
+	/*
 	// DB의 프로토콜과 포트 넘버 비교
 	if (protocol == "TCP" && port_number == "135") {
 		//KillMaliciousProcess(pid);
 		AddAttackRecord();
-	}
+	}*/
 }
 
 void CWebcamCrackingDetectionDlg::KillMaliciousProcess(CString pid)
@@ -301,78 +363,32 @@ void CWebcamCrackingDetectionDlg::OnTimer(UINT_PTR nIDEvent)
 		
 		break;
 	}
-	KillTimer(1);
+	
+	//KillTimer(1);
 }
 
 	
-// db select example
-/*
-
-/*
-
-
-mysql_init(&m_MySql);
-
-
-
-if (mysql_real_connect(&m_MySql, DB_ADDRESS, DB_ID, DB_PASS, DB_NAME, 3306, NULL, 0) == NULL)
-{ // 디비 접속
-return;
-}
-
-strQuery.Format(_T("SELECT id FROM user WHERE id ='%s' "), _T("CL"));
-
-if (mysql_query(&m_MySql, CStringA(strQuery))) // 쿼리 요청
-{
-AfxMessageBox(_T("쿼리 에러"));
-return;
-}
-
-if ((m_Res = mysql_store_result(&m_MySql)) == NULL) // 결과를 m_Res에 저장
-{
-return;
-}
-row = mysql_fetch_row(m_Res); //m_Res의 값을 row로 저장해서 하나씩 갖고 오기
-
-
-중략.....
-
-
-mysql_free_result(m_Res); // m_Res 삭제
-mysql_close(&m_MySql); // m_MySql 삭제
-
-
-
-*/
 
 void CWebcamCrackingDetectionDlg::OnBnClickedButton2()
 {
-	
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-
 	cv::VideoCapture vc(0); //0번웹캠 초기화
 	cv::Mat img;
-	while (1) {
+	int webcam_time = 1;
+	m_progress.SetPos(0);
+
+	while (webcam_time) {
 		vc >> img;
 		if (img.empty())
 		{
-			/*
-			if (IDYES == MessageBox("해킹중입니다. 웹캠을 끄시겠습니까?", "경고", MB_YESNO))
-			{
-				MessageBox("네 꺼주세요");
-			}
-			else
-				if (IDNO)
-				{
-					MessageBox("아니요");
-				}
-*/
+			m_progress.SetPos(100);
 			MessageBox("웹캠이 실행중입니다. 위험합니다!","경고");
 			break;
 		}
 		else
 		{
-			MessageBox("웹캠 실행X, 안심하셔도 됩니다.");
+			m_progress.SetPos(100);
+			MessageBox("웹캠 실행X, 안심하셔도 됩니다.", "안심");
 			break;
 		}
 	}

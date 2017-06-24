@@ -1,5 +1,4 @@
 // WebcamCrackingDetection.cpp : 응용 프로그램에 대한 클래스 동작을 정의합니다.
-//
 
 #include "stdafx.h"
 #include "WebcamCrackingDetection.h"
@@ -11,14 +10,12 @@
 
 
 // CWebcamCrackingDetectionApp
-
 BEGIN_MESSAGE_MAP(CWebcamCrackingDetectionApp, CWinApp)
 	ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
 END_MESSAGE_MAP()
 
 
 // CWebcamCrackingDetectionApp 생성
-
 CWebcamCrackingDetectionApp::CWebcamCrackingDetectionApp()
 {
 	// 다시 시작 관리자 지원
@@ -29,14 +26,10 @@ CWebcamCrackingDetectionApp::CWebcamCrackingDetectionApp()
 
 }
 
-
 // 유일한 CWebcamCrackingDetectionApp 개체입니다.
-
 CWebcamCrackingDetectionApp theApp;
 
-
 // CWebcamCrackingDetectionApp 초기화
-
 BOOL CWebcamCrackingDetectionApp::InitInstance()
 {
 	// 응용 프로그램 매니페스트가 ComCtl32.dll 버전 6 이상을 사용하여 비주얼 스타일을
@@ -96,7 +89,6 @@ BOOL CWebcamCrackingDetectionApp::InitInstance()
 
 	// 대화 상자가 닫혔으므로 응용 프로그램의 메시지 펌프를 시작하지 않고  응용 프로그램을 끝낼 수 있도록 FALSE를
 	// 반환합니다.
-
 
 	return FALSE;
 }
